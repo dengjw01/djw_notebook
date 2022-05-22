@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<head>
+<title>Notebook</title>
+<link rel="shortcut icon" href="favicon.ico" />
+<link rel="stylesheet" href="assets/css/bootstrap.css" />
+<script src="assets/js/jquery-3.3.1.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+<script src="assets/js/vue.js"></script>
+<script>
+			$(document).ready(function() {
+				var vm1 = new Vue({
+					el: "#main",
+					data: {
+						word: '', //搜索的关键词
+						duration: 0, //搜索耗时毫秒数
+						size: 0, //搜索结果返回的新闻数
+						list: [], //搜索结果
+						list2: [] //随机推荐
+					},
+					methods: {
+						getViewUrl: function(id) {
+							return "article-view.html?id=" + id;
+						}
+					},
+					created: function() {
+						//生成 vm1 实例时调用
+					}
+				});
+			});
+		</script>
+		<script>
+			$(document).ready(function() {
+				var vm1 = new Vue({ /* 代码如上 */ });
+				$("#input1").focus(); //input1 获得焦点
+				$("#btn1").click(function() {
+					var word = $("#input1").val();
+					if (word != null && word.trim().length > 1) {
+						vm1.word = word;
+						$('#modal').modal(); //显示模态框
+						doAjax(); //发起 ajax 请求
+					} else {
+						alert("查询请输入至少 2 个字符！");
+					}
+				});
+		
+				function doAjax() {
+					$.ajax({
+						url: base_url + 'servlet/article-search.do?w=' + $("#input1").val(),
+						dataType: 'json',
+						success: function(res) { // 参数 res 表示返回的 json 对象
+							vm1.duration = res.duration;
+							vm1.size = res.size;
+							vm1.list = res.list;
+							$('#modal').modal('hide'); // 隐藏模态框
+						},
+						error: function(e) {
+							alert("error in ajax article-search.do!");
+							console.log(e);
+						},
+					});
+				}
+			});
+		</script>
+</head>
+
+<body>
+	<div id="wrapper" class="container">
+			<div id="header" class="row">
+				<h1 class="text-center"><a href="index.html">News Demo</a></h1>
+			</div>
+			<div id="main" class="row">
+				<div id="content" class="col-md-8">
+					<div id="content" class="col-md-8">
+						<div class="form-group form-inline text-center">
+							<input id="input1" type="text" class="form-control" />
+							<button id="btn1" class="btn btn-primary">搜索</button>
+						</div>
+						<div>
+							<p>
+								搜索关键词：<label id="word-label">{{word}}</label>
+								耗时：<label id="time-label">{{duration}}</label> 毫秒
+								返回：<label id="records-label">{{size}}</label> 条新闻
+							</p>
+						</div>
+						<div id="div1" v-for="(article,index) in list" :key="article.id">
+							<p>{{index+1}}.<a :href='getViewUrl(article.id)' target="_blank">
+									{{article.title}}</a>
+							</p>
+						</div>
+					</div>
+				</div>
+				<div id="side" class="col-md-4">
+					<!--边栏区域 -->
+				</div>
+			</div>
+			<div id="footer" class="row">
+				<div class="col-md-12">
+					<p class="text-center">All Rights Reserved 2020-2022</p>
+				</div>
+			</div>
+		</div>
+		<!-- built files will be auto injected -->
+</body>
+</html>

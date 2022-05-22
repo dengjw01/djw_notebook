@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<head>
+<title>Notebook</title>
+<link rel="shortcut icon" href="favicon.ico" />
+<link rel="stylesheet" href="assets/css/bootstrap.css" />
+<script src="assets/js/jquery-3.3.1.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+<script src="assets/js/vue.js"></script>
+<script>
+	$(document).ready(function() {		
+		var vm = new Vue({
+			el : '#app',
+			data : {
+			isshow:false,
+				current_user : {
+					id : 0,
+					username : "",
+					password : "",
+				},
+				item : {
+					id : 0,
+					item_text : "",
+					amount : 0,
+					date_paid : "2020-1-1",
+					category_id : 0,
+					user_id : 0,
+				},
+				categories : [],//要去数据库获取属性值
+				items : [],
+			},
+			/* mounted: function(){
+			    console.log("mounted");
+			    var self = this;
+			    $.ajax({
+			        url : "GetCategoriesServlet",
+			        dataType : "json",
+			        success : function(result){
+			            self.categories = result;
+			        },
+			        error : function(){
+			            alert("error");
+			        }
+			    })
+			}, */
+			methods:{
+			    list: function(){
+			    el:"#item_list";
+			    var self = this;
+			    var user = {
+			        userid:self.current_user.id,
+		        };
+			    $.ajax({
+			        data : user,
+			        url : "servlet/ItemListServlet",
+			        dataType : "json",
+			        success : function(result){
+			            vm.items = result;
+			            //alert(vm.items);
+			        },
+			        error : function(){
+			            //alert("er");
+			        }
+			    })
+			    },
+				signin:function(){
+					var self = this;				
+					$.ajax({
+						url:"servlet/UserSigninServlet",
+						data:self.current_user,
+						success:function(res){
+							//alert(res);
+							// 请求UserSigninServlet，返回的是-1或者userid
+							self.current_user.id = res;
+							if(self.current_user.id>0){
+								// 跳转到记账的tab
+								alert("用户登录成功！")
+								$("#my_tabs a:eq(1)").tab("show");
+							}else{
+								alert("用户名或密码错误，登录失败！");
+								//self.current_user.id = -1;
+							}		
+						},
+						error:function(){alert("error")},
+					});
+								
+				},
+				signout:function(){					
+					this.current_user.id = 0;
+					this.current_user.username = "";
+					this.current_user.password = "";
+					alert("用户登出！");
+				},
+				item_add:function(){
+				    var user_id = this.current_user.id;
+				    var item_text = this.item.item_text;
+				    var category_id = this.item.category_id;
+				    var amount = this.item.amount;
+				    var date_paid = this.item.date_paid;
+					if(this.item.item_text.trim().length<1){
+						alert("支出项目不能为空");
+					}else if(this.item.category_id==0){
+						alert("支出分类不能为空");
+					}else{						
+						//this.items.push(obj);
+						//alert(this.item.item_text.trim() + " , " + this.item.category_id + " , " + this.item.amount + " , " + this.item.date_paid);
+						$.ajax({
+						url:"servlet/ItemAddServlet",
+						
+						data:{
+						    user_id,
+						    item_text,
+						    amount,
+						    date_paid,
+						    category_id
+						    },
+						success:function(res){
+							//alert(res);
+							// 请求UserSigninServlet，返回的是-1或者userid
+							//user_id = res;
+							if(res>0){
+								// 跳转到记账的tab
+								//alert("用户登录成功！")
+								$("#my_tabs a:eq(2)").tab("show");
+								vm.list();
+							}else{
+								alert("插入失败！");
+								//self.current_user.id = -1;
+							}		
+						},
+						error:function(){alert("error")},
+					});
+					}					
+				},
+				item_update:function(id){
+				 var self = this;
+				 alert("update item, id = " + id);
+				 self.item.id=id;
+				 this.isshow = !this.isshow;
+				 
+				},
+				update:function(){
+				    var self = this;
+				    var item_id=self.item.id;
+				    alert("update item, id = " + item_id);
+				    var item_text = this.item.item_text;
+				    var amount = this.item.amount;
+				    var date_paid = this.item.date_paid;
+						$.ajax({
+						url:"servlet/ItemUpdateServlet",
+						data:{
+						    item_id,
+						    item_text,
+						    amount,
+						    date_paid,
+						    },
+						success:function(res){
+							//alert(res);
+							// 请求UserSigninServlet，返回的是-1或者userid
+							//user_id = res;
+							if(res>0){
+								// 跳转到记账的tab
+								//alert("用户登录成功！")
+								$("#my_tabs a:eq(2)").tab("show");
+								vm.list();
+							}else{
+								alert("更新失败！");
+								//self.current_user.id = -1;
+							}		
+						},
+						error:function(){alert("error")},
+					});
+						
+				},
+				item_del:function(id){
+				    var del = {del_id:id}
+					var self = this;				
+					$.ajax({
+						url:"servlet/ItemDeleteServlet",
+						data:del,
+						dataType:"json",
+						success:function(res){
+							//alert(res);
+							
+							if(res>0){
+								// 跳转到记账的tab
+								alert("删除成功！")
+								$("#my_tabs a:eq(2)").tab("show");
+								vm.list();
+							}else{
+								alert("删除失败！");
+								//self.current_user.id = -1;
+							}		
+						},
+						error:function(){alert("error")},
+					});
+				}
+			}
+		});
+		
+		$("#my_tabs a").click(function() {			
+			$(this).tab("show");
+			var tab_href = $(this).attr("href");
+			//alert(tab_href);
+			if(tab_href=="#item_list"){
+			}
+		});
+		
+		var categories_arr = [{id:1,category_text:"学习"},{id:2,category_text:"购物"},{id:3,category_text:"就餐"}];//这个给categories赋值了
+		var items_arr = [ {"id" :4,"item_text" : " 中餐 " ,"amount" :10.00,"date_paid" : " 2019-03-05","category_id":3,"category_text":"就餐" },{"id" :3,"item_text" : " 1 " ,"amount" :1.00,"date_paid" : " 2019-01-01" },{"id" :2,"item_text" : " 买书 " ,"amount" :100.00,"date_paid" : "null" },{"id" :1,"item_text" : " 早餐 " ,"amount" :6.00,"date_paid" : " null" }];		
+	
+		vm.categories = categories_arr;
+		//vm.items = items_arr;
+	});
+</script>
+
+</head>
+
+<body>
+	<div id="app" class="container">		
+		<div class="row">
+			<div>
+				<h1 class="text-center">Notebook</h1>
+				<p class="text-right" v-show="current_user.id>0">
+				当前用户：{{current_user.username}}
+				<a href="#" v-on:click="signout">退出登录</a>
+				</p>
+			</div>
+		</div>
+		<div class="row">
+			<div>
+				<!-- Nav tabs -->
+				<ul id="my_tabs" class="nav nav-tabs" role="tablist">
+					<li role="presentation" class="active"><a href="#home"
+						aria-controls="home" role="tab" > 首 页 </a></li>
+					<li role="presentation"><a href="#item_add"
+						aria-controls="item_add" role="tab"> 记 账 </a></li>
+					<li role="presentation"><a href="#item_list"
+						aria-controls="item_list" role="tab" v-on:click="list"> 列 表 </a></li>
+				</ul>
+				<!-- Tab panes -->
+				<div class="tab-content">
+					<div role="tabpanel" class="tab-pane active" id="home">
+						<h2 class="text-center">用户登录</h2>
+						<div v-show="current_user.id==-1" class="alert alert-danger text-center"
+							role="alert">
+							<strong> 用户名或密码错误，请重试！</strong>
+						</div>
+						<div v-show="current_user.id>0" class="alert alert-success text-center"
+							role="alert">
+							<strong> 登录成功，开始记账或者查看列表</strong>
+						</div>
+						<div v-show="current_user.id<1" class="form-inline text-center">
+							<p>
+								<label>用 户：</label><input type="text" name="username"
+									class="form-control" v-model="current_user.username" />
+							</p>
+							<p>
+								<label>密 码：</label><input type="password" name="password"
+									class="form-control" v-model="current_user.password" />
+							</p>
+							<p>
+								<button class="btn btn-primary" v-on:click="signin">登录</button>
+							</p>
+						</div>
+					</div>
+					<div role="tabpanel" class="tab-pane" id="item_add">
+						<h2 class="text-center">记 账</h2>
+						<div v-show="current_user.id>0" class="form-inline text-center">
+							<p>
+								<label>支出项目：</label><input type="text" name="item_text"
+									class="form-control" v-model="item.item_text" />
+							</p>
+							<p>
+								<label>支出分类：</label><select name="category_select" class="form-control" v-model="item.category_id">
+								<option value="0">===== 请选择分类 =====</option>
+								<template v-for="(category) in categories">
+									<option v-bind:value="category.id" v-bind:key="category.id">{{category.category_text}}</option>
+								</template>
+								<!-- 
+								<option value="1">购物</option>
+								<option value="2">就餐</option>
+								<option value="3">学习</option>
+								 -->
+								</select>
+							</p>
+							<p>
+								<label>支出金额：</label><input type="text" name="amount"
+									class="form-control" v-model="item.amount" />
+							</p>
+							<p>
+								<label>支出日期：</label><input type="date" name="date_paid"
+									class="form-control" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" v-model="item.date_paid" />
+							</p>
+							<p>
+								<button class="btn btn-primary" v-on:click="item_add">记账</button>
+							</p>
+						</div>
+					</div>
+					<div role="tabpanel" class="tab-pane" id="item_list">
+						<h2 class="text-center">列 表</h2>
+						<table id="table1" class="table  table-hover">
+							<thead>
+							<tr>
+								<th>序</th>								
+								<th>支出项目</th>
+								<th>分类</th>
+								<th>金额</th>
+								<th>日期</th>
+								<th>操作</th>
+							</tr>
+							</thead>
+							<tr v-for="(item,index) in items">
+								<td>{{index+1}}</td>								
+								<td>{{item.item_text}}</td>
+								<td>{{item.category_text}}</td>
+								<td>{{item.amount}}</td>
+								<td>{{item.date_paid}}</td>
+								<td><button class="btn-sm btn-info" v-on:click="item_update(item.id)" >修改</button> 
+								<button class="btn-sm btn-danger" v-on:click="item_del(item.id)">删除</button> </td>
+							</tr>
+						</table>
+						<div  v-show="isshow" class="tab-pane">
+                        <h3>修改</h3>
+                        <label>支出项目：</label><input type="text" name="item_text"
+									class="form-control" v-model="item.item_text" />
+							</p>
+							
+							<p>
+								<label>支出金额：</label><input type="text" name="amount"
+									class="form-control" v-model="item.amount" />
+							</p>
+							<p>
+								<label>支出日期：</label><input type="date" name="date_paid"
+									class="form-control" pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" v-model="item.date_paid" />
+							</p>
+                        <button class="btn btn-primary btn-block" v-on:click = "update()">完成</button>
+                    </div>                 
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

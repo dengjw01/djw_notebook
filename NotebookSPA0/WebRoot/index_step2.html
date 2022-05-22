@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<head>
+<title>Notebook</title>
+<link rel="shortcut icon" href="favicon.ico" />
+<link rel="stylesheet" href="assets/css/bootstrap.css" />
+<script src="assets/js/jquery-3.3.1.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+<script src="assets/js/vue.js"></script>
+<script>
+	$(document).ready(function() {
+		var item = {			
+			"item_text" : " 中餐 ",
+			"amount" : 10.98,
+			"date_paid" : "2020-11-11",
+			"category_id" : 3,
+			"user_id":1,
+		};
+		var user = {
+			id:0,
+			username:"",
+			password:"",
+		};
+		$("#btn2").click(function(){
+			$.ajax({
+				url:"servlet/ItemAddServlet",
+				data:item,
+				success:function(res){
+					alert(res);
+				},
+				error:function(){},
+			});
+		});
+		$("#btn3").click(function(){
+			user.username = $("#username").val();
+			user.password = $("#password").val();
+			alert(user.id + ","+user.username+","+user.password);
+			$.ajax({
+				url:"servlet/UserSigninServlet",
+				data:user,
+				success:function(res){
+					alert(res);
+				},
+				error:function(){
+					alert("Error");
+				},
+			});
+		});
+	});
+</script>
+</head>
+
+<body>
+	<div id="app" class="container">
+		<div class="row">
+			<div>
+				<h1 class="text-center">Notebook</h1>
+				<h2>API测试</h2>
+			</div>
+		</div>
+		<div class="row">
+			<div class="form-inline">
+				<p>
+					<a href="servlet/ItemListServlet?userid=1" target="blank" class="btn btn-success">1、Item
+						List</a>
+				</p>
+				<p>
+					<button id="btn2" class="btn btn-info">2、Item Add</button>
+				</p>
+				<hr/>
+				<p>
+				<p>
+								<label>用 户：</label><input type="text" id="username" name="username"
+									class="form-control"  />
+							</p>
+							<p>
+								<label>密 码：</label><input type="password" id="password" name="password"
+									class="form-control" />
+							</p>
+							<p>测试账号  用户 / 密码 : abc / abc123</p>
+					<button id="btn3" class="btn btn-warning">3、User Signup</button>
+				</p>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
